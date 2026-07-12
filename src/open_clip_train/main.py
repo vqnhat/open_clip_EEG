@@ -674,15 +674,14 @@ def main(args):
 
         if any(v in data for v in ('val', 'imagenet-val', 'imagenet-v2', 'audio-zeroshot')):
             metrics, features = evaluate(train_state.task, data, completed_epoch, args, tb_writer=writer, tokenizer=tokenizer)
+            if metrics['image_to_text_R@1'] > max_metrics['image_to_text_R@1']:
+                compute_similarity_heatmap(features, epoch, '../visualization')            
             for k, v in metrics.items():
                 if k in max_metrics.keys():
                     max_metrics[k] = max(max_metrics[k], metrics[k])
             
             print(f"Max metrics " + "\t".join([f"{k}: {round(v, 4):.4f}" for k, v in max_metrics.items()]) + " " + str(args.lr))
             # sync to avoid some processes advancing/exiting while rank 0 finishes eval
-
-            if epoch % (args.epochs // 5) == 0 or epoch == args.epochs-1:
-                compute_similarity_heatmap(features, epoch, '../visualization')
 
             if args.distributed:
                 torch.distributed.barrier()
