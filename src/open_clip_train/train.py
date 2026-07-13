@@ -29,6 +29,7 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from sklearn.metrics.pairwise import cosine_similarity
 import seaborn as sns
+import pandas as pd
 
 def get_wandb_backend(args):
     """Return the active wandb-compatible run logger (wandb or trackio), or None if neither is selected.
@@ -627,6 +628,7 @@ def compute_similarity_heatmap(features, epoch, output_dir):
     text_features_left = []
     eeg_features_right = []
     text_features_right = []
+    labels = []
 
     for idx, label in enumerate(features['all_text']):
         if 'left' in label:
@@ -634,8 +636,10 @@ def compute_similarity_heatmap(features, epoch, output_dir):
             text_features_left.append(features['text_features'][idx])
         elif 'right' in label:
             eeg_features_right.append(features['image_features'][idx])
-            text_features_right.append(features['text_features'][idx])  
-
+            text_features_right.append(features['text_features'][idx]) 
+        
+    labels = labels + ["left"] * len(eeg_features_left)
+    labels = labels + ["right"] * len(eeg_features_right)
     eeg_features = eeg_features_left + eeg_features_right
     text_features = text_features_left + text_features_right
     eeg_features = torch.stack(eeg_features)
@@ -650,7 +654,15 @@ def compute_similarity_heatmap(features, epoch, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
     plt.savefig(os.path.join(output_dir, "epoch_%d_similarity.png" % (epoch)))
-       
+
+    # save features
+    df = pd.DataFrame({
+        "EEG features": eeg_features.tolist(),
+        "Text features": text_features.tolist(),
+        "Label": labels,
+    })
+
+    df.to_csv(os.path.join(output_dir, "epoch_%d_features.csv" % (epoch)), index=False)
 
 def evaluate(task, data, epoch, args, tb_writer=None, tokenizer=None):
     """Run paired feature validation and supported zero-shot eval for a task."""
