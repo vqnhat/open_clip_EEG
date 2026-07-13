@@ -12,6 +12,7 @@ pip install -r requirements.txt
 Launch the training script using torchrun. Here is an example command for a single node:
 
 ```
+cd open_clip_EEG/src
 torchrun --nproc_per_node 1 -m open_clip_train.main --train-num-samples 10968539 --dataset-type EEG --batch-size 40 --precision amp --workers 0 --fold 1 --model ViT-H-14 --pretrained ../weights/ViT-H-14/open_clip_pytorch_model.bin --dataset "../data/EEG-BasedBCIClassification/2. BCI-ABSB/ABSB-4D/BCI_ABSB_SubjectB_2LR_4D.mat" --max_EEG_channel 62
 ```
 
